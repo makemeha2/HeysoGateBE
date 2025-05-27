@@ -1,11 +1,12 @@
 spring:
   application:
     name: heysoGateBE
+# p6spy 사용시
   datasource:
-    url: jdbc:mysql://localhost:3306/HeysoGate?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:p6spy:mariadb://localhost:3306/HeysoGate?characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: root
     password: 1234
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
 
   devtools:
     restart:
@@ -18,3 +19,4 @@ mybatis:
   type-aliases-package: heysoGate.domain       # 도메인 패키지
   configuration:
     map-underscore-to-camel-case: true         # DB 컬럼명 -> 자바 카멜케이스 자동 매핑
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
