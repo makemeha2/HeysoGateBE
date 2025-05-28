@@ -52,9 +52,14 @@ public class JwtTokenProvider {
         }
     }
 
-    public String getUsername(String token) {
+    public String getEmail(String token) {
         return Jwts.parserBuilder().setSigningKey(secretKey).build()
                 .parseClaimsJws(token)
                 .getBody().getSubject();
+    }
+
+    public String getRole(String token) {
+        return Jwts.parserBuilder().setSigningKey(secretKey).build()
+                .parseClaimsJws(token).getBody().get("role", String.class);
     }
 }
