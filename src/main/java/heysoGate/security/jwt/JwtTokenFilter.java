@@ -10,21 +10,10 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 public class JwtTokenFilter extends GenericFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
-
-    private static final List<String> EXCLUDE_URLS = Arrays.asList(
-            "/register",
-            "/login",
-            "/swagger-ui",
-            "/v3/api-docs",
-            "/swagger-resources"
-            // 필요시 패턴 매칭 보완
-    );
 
     public JwtTokenFilter(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -34,14 +23,6 @@ public class JwtTokenFilter extends GenericFilter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String path = httpRequest.getRequestURI();
-
-        // ★ 예외 URL은 바로 체인으로 넘김
-        if (EXCLUDE_URLS.stream().anyMatch(path::startsWith)) {
-            chain.doFilter(request, response);
-            return;
-        }
 
         String token = resolveToken((HttpServletRequest) request);
 
@@ -57,6 +38,8 @@ public class JwtTokenFilter extends GenericFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+
+        /* 3. 토큰이 없거나 유효하지 않으면 그냥 체인 진행 (SecurityConfig 에서 authenticated() 로 막힌 요청만 401/403 처리됨) */
         chain.doFilter(request, response);
     }
 

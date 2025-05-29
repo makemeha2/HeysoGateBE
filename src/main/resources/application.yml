@@ -23,3 +23,11 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true         # DB 컬럼명 -> 자바 카멜케이스 자동 매핑
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+server:
+  servlet:
+    context-path: /api/v1
+
+jwt:
+  secret: DEV
+  expiration: DEV
