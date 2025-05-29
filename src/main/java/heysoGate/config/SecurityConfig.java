@@ -26,14 +26,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // TODO : 추후 운영에서는 swagger가 안보이고 개발에서만 보이도록 분기처리
-        http.csrf(AbstractHttpConfigurer::disable)
+        http
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement((sessionManagement) ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authorize ->
-                        authorize.requestMatchers(HttpMethod.POST, "/login").authenticated().
-                                requestMatchers("/admin/**").hasRole("ADMIN").
-                                requestMatchers("/user/**").hasRole("USER").
-                            anyRequest().permitAll())
+//                .authorizeHttpRequests(authorize ->
+//                        authorize.requestMatchers(HttpMethod.POST, "/login").permitAll().
+//                                requestMatchers("/admin/**").hasRole("ADMIN").
+//                                requestMatchers("/user/**").hasRole("USER").
+//                            anyRequest().permitAll())
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/api/users/register", // ← 회원가입은 모두 허용!
+                                "login"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider, customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

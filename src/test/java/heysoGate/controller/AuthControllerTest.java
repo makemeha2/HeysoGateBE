@@ -1,84 +1,64 @@
 package heysoGate.controller;
 
-import heysoGate.domain.User;
-import heysoGate.dto.LoginRequestDto;
-import heysoGate.mapper.UserMapper;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.MvcResult;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(AuthController.class)
+@SpringBootTest // 실제 Spring Boot 전체 컨텍스트 로드
+@AutoConfigureMockMvc
+//@ActiveProfiles("test") // application-test.yml 적용
+@ActiveProfiles
 class AuthControllerTest {
-//    @Autowired
-//    private MockMvc mockMvc;    // MEMO: 이게 뭘까?
-//
-//    @MockBean
-//    private UserMapper userMapper;
-//
-//    @MockBean
-//    private AuthenticationManager authenticationManager;
-//
-//    @MockBean
-//    private heysoGate.security.jwt.JwtTokenProvider jwtTokenProvider;
-//
-//    @MockBean
-//    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
-//
-//    @Test
-//    void login_success() throws Exception {
-//        User user = new User();
-//        user.setEmail("user1@example.com");
-//        user.setPassword("$2a$10$Dow1GVdkeYyLQJd5SxZaqOBOcrX5E6C2yD.S0Vv0D4zjF3Viqx2Zq");
-//        user.setRole("ADMIN");
-//
-//        Mockito.when(userMapper.findByEmail("user1@example.com")).thenReturn(user);
-//        Mockito.when(passwordEncoder.matches("1234", "$2a$10$Dow1GVdkeYyLQJd5SxZaqOBOcrX5E6C2yD.S0Vv0D4zjF3Viqx2Zq")).thenReturn(true);
-//        Mockito.when(jwtTokenProvider.createToken("user1@example.com", "USER")).thenReturn("MOCK_TOKEN");
-//
-//        LoginRequestDto dto = new LoginRequestDto("user1@example.com", "1234");
-//
-//        mockMvc.perform(MockMvcRequestBuilders.post("/login")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content("""
-//                        {
-//                          "email": "user1@example.com",
-//                          "password": "1234"
-//                        }
-//                        """)
-//                )
-//                .andExpect(status().isOk());
-//                //.andExpect(content().string("MOCK_TOKEN"));
-//    }
-//
-//    @Test
-//    void login_fail_wrong_password() throws Exception {
-////        User user = new User();
-////        user.setUsername("testUser");
-////        user.setPassword("encodedPwd");
-////        user.setRole("ADMIN");
-////
-////        Mockito.when(userMapper.findByUsername("testUser")).thenReturn(user);
-////        Mockito.when(passwordEncoder.matches("wrongPwd", "encodedPwd")).thenReturn(false);
-////
-////        mockMvc.perform(MockMvcRequestBuilders.post("/login")
-////                        .contentType(MediaType.APPLICATION_JSON)
-////                        .content("""
-////                        {
-////                          "username": "testUser",
-////                          "password": "wrongPwd"
-////                        }
-////                        """)
-////                )
-////                .andExpect(status().is4xxClientError());
-//    }
+    @Autowired
+    private MockMvc mockMvc;
+
+    @DisplayName("실제 DB 및 토큰 생성까지 전체 인증 테스트")
+    @Test
+    void login_success_integration() throws Exception {
+        // testuser/testpass (data.sql에서 INSERT된 사용자)
+
+        String jsonBody = """
+            {
+              "email": "user1@example.com",
+              "password": "1234"
+            }
+            """;
+
+        MvcResult result = mockMvc.perform(post("/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jwt = result.getResponse().getContentAsString();
+        System.out.println("생성된 JWT 토큰: " + jwt);
+
+        // 토큰 구조 검증 (jwt 형식: header.payload.signature)
+        org.assertj.core.api.Assertions.assertThat(jwt.split("\\.")).hasSize(3);
+    }
+
+    @DisplayName("비밀번호 오류로 로그인 실패")
+    @Test
+    void login_fail_wrong_password() throws Exception {
+        String jsonBody = """
+            {
+              "email": "user1@example.com",
+              "password": "$2a$10$Dow1GVdkeYyLQJd5SxZaqOBOcrX5E6C2yD.S0Vv0D4zjF3Viqx2Zq"
+            }
+            """;
+
+        mockMvc.perform(post("/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().is4xxClientError());
+    }
 }

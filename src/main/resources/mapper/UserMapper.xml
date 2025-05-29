@@ -5,14 +5,22 @@
 
 <mapper namespace="heysoGate.mapper.UserMapper">
 
+    <!-- 회원 전체 목록 -->
     <select id="findAll" resultType="heysoGate.domain.User">
         SELECT * FROM users
     </select>
 
+    <!-- ID로 회원 찾기 -->
     <select id="findByEmail" parameterType="String" resultType="heysoGate.domain.User">
         SELECT *
         FROM users
         WHERE email = #{email}
     </select>
+
+    <!-- 회원 등록 -->
+    <insert id="insertUser" parameterType="heysoGate.domain.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (email, name, password, provider, provider_id, profile_image_url, role, is_active, created_at, updated_at)
+        VALUES (#{email}, #{name}, #{password}, 'local', NULL, NULL, 'USER', 1, NOW(), NOW())
+    </insert>
 
 </mapper>

@@ -38,3 +38,6 @@ out/
 
 ### Custom ###
 /spy.log
+
+# .gitignore에 추가
+application-dev.yml
