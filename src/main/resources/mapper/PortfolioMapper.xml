@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="heysoGate.mapper.PortfolioMapper">
+
+    <resultMap id="PortfolioMap" type="heysoGate.dto.PortfolioDto">
+        <id property="id" column="id" />
+        <result property="title" column="title" />
+        <result property="subtitle" column="subtitle" />
+        <result property="description" column="description" />
+        <result property="thumbnailUrl" column="thumbnail_url" />
+        <result property="sortOrder" column="sort_order" />
+    </resultMap>
+
+    <select id="selectPortfolioList" resultMap="PortfolioMap">
+        SELECT *
+        FROM portfolio
+        <where>
+            <include refid="searchKeywordCondition"/>
+        </where>
+        ORDER BY sort_order ASC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 전체 개수 조회 -->
+    <select id="countPortfolio" resultType="int">
+        SELECT COUNT(*)
+        FROM portfolio
+        <where>
+            <include refid="searchKeywordCondition"/>
+        </where>
+    </select>
+
+    <insert id="insertPortfolio">
+        INSERT INTO portfolio (
+        title, subtitle, description, thumbnail_url, sort_order, created_at, updated_at
+        ) VALUES (
+        #{title}, #{subtitle}, #{description}, #{thumbnailUrl}, #{sortOrder}, NOW(), NOW()
+        )
+    </insert>
+
+
+    <sql id="searchKeywordCondition">
+        <if test="keyword != null and keyword != ''">
+            (title LIKE CONCAT('%', #{keyword}, '%')
+            OR description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </sql>
+
+</mapper>
